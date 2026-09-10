@@ -1,4 +1,27 @@
 /* ==========================================================================
+   Schrift — lokal eingebunden (SIL Open Font License, siehe fonts/OFL.txt)
+   ========================================================================== */
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 400 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("fonts/archivo-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 400 700;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url("fonts/archivo-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ==========================================================================
    Token
    ========================================================================== */
 :root {
@@ -120,6 +143,8 @@ section > .behaelter > h2 + .fliesstext,
 section > .behaelter > .fliesstext + .fliesstext { margin-top: var(--raum-2); }
 
 section > .behaelter > .gegenueber,
+section > .behaelter > .fakten,
+section > .behaelter > .rechtstext,
 section > .behaelter > .rechtsstand,
 section > .behaelter > .ablauf,
 section > .behaelter > .merkmale,
@@ -215,7 +240,7 @@ section {
    ========================================================================== */
 .hero__innen {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
   gap: clamp(40px, 6vw, 80px);
   align-items: start;
 }
@@ -392,6 +417,43 @@ section {
 
 /* Haarlinie nur zwischen den Zeilen, zweispaltig also ab dem dritten Eintrag */
 .merkmale li:nth-child(n + 3) { border-top: var(--haarlinie); }
+
+/* ==========================================================================
+   Rechtstexte (Impressum, Datenschutz)
+   ========================================================================== */
+.rechtstext {
+  max-width: var(--spalte-text);
+}
+
+.rechtstext > * + * { margin-top: var(--raum-2); }
+
+.rechtstext h2 {
+  font-size: var(--fs-h3);
+  letter-spacing: 0;
+  margin-top: var(--raum-5);
+}
+
+.rechtstext > h2:first-child { margin-top: 0; }
+
+.rechtsliste {
+  padding-left: 0;
+  list-style: none;
+}
+
+.rechtsliste li {
+  padding-block: var(--raum-1);
+  padding-left: var(--raum-3);
+  border-top: var(--haarlinie);
+}
+
+.rechtsliste li:last-child { border-bottom: var(--haarlinie); }
+
+.fakten__zusatz {
+  display: block;
+  font-size: var(--fs-klein);
+  color: var(--grau);
+  font-variant-numeric: normal;
+}
 
 /* ==========================================================================
    Ansprechpartner
