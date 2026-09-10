@@ -73,11 +73,12 @@
         <div class="gespraech__spalte">
           <div class="karte">
             <h2 class="gespraech__untertitel">Terminwunsch senden</h2>
-            <p class="klein">Wir melden uns mit zwei konkreten Terminvorschlägen zurück.</p>
+            <p class="klein">Geht direkt an Lucas Beneke. Wir melden uns mit zwei konkreten Terminvorschlägen zurück.</p>
 
             <form class="formular" id="gespraech-formular"
-                  action="mailto:lucas-beneke@gordion.io" method="post" enctype="text/plain"
-                  data-mail="lucas-beneke@gordion.io" novalidate>
+                  action="https://formsubmit.co/lucas-beneke@gordion.io" method="post"
+                  data-empfaenger="lucas-beneke@gordion.io"
+                  data-endpunkt="https://formsubmit.co/ajax/lucas-beneke@gordion.io" novalidate>
               <div class="feld">
                 <label for="f-name">Name</label>
                 <input id="f-name" name="name" type="text" autocomplete="name" required>
@@ -134,7 +135,7 @@
 
       </div>
 
-      <p class="rechtsstand">Das Formular läuft ohne Server: Eingaben bleiben im Browser des Besuchers, der Terminwunsch geht als vorbereitete E-Mail an <a href="mailto:lucas-beneke@gordion.io">lucas-beneke@gordion.io</a> und wird erst vom Absender selbst verschickt. ⚠️ <strong>Vor Livegang prüfen und ergänzen:</strong> <code>{{CAL_LINK}}</code> auf den Buchungskalender setzen; für einen serverseitigen Empfang später einen Formular-Endpunkt ergänzen.</p>
+      <p class="rechtsstand">Das Formular läuft ohne eigenen Server: Die Eingaben werden im Browser des Besuchers protokolliert und mit dem Klick direkt an <a href="mailto:lucas-beneke@gordion.io">lucas-beneke@gordion.io</a> übermittelt — über den Weiterleitungsdienst <code>formsubmit.co</code>, eingetragen als <code>data-endpunkt</code> am Formular. ⚠️ <strong>Vor Livegang prüfen und ergänzen:</strong> erste Übermittlung bestätigen (der Dienst schickt Lucas einmalig einen Aktivierungslink), Auftragsverarbeitung und Datenschutzerklärung um diesen Dienstleister ergänzen, <code>{{CAL_LINK}}</code> auf den Buchungskalender setzen.</p>
     </div>
   </section>
 

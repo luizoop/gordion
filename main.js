@@ -14,17 +14,22 @@
   }
 
   /* Terminformular auf der Seite "Gespräch vereinbaren".
-     Ohne Server: Eingaben liegen im localStorage des Besuchers, der
-     Terminwunsch geht als vorbereitete E-Mail an den Empfänger raus. */
+     Ohne eigenen Server: Eingaben werden im localStorage protokolliert und
+     mit dem Klick direkt an den Endpunkt übermittelt. Was nicht durchgeht,
+     bleibt im Protokoll stehen und wird beim nächsten Seitenaufruf nachgereicht. */
   var formular = document.getElementById("gespraech-formular");
   if (formular) {
     var ENTWURF = "gordion:gespraech-entwurf";
-    var ARCHIV = "gordion:gespraech-anfragen";
-    var ARCHIV_MAX = 20;
+    var PROTOKOLL = "gordion:gespraech-protokoll";
+    var PROTOKOLL_MAX = 20;
+
+    var endpunkt = formular.getAttribute("data-endpunkt") || "";
+    var empfaenger = formular.getAttribute("data-empfaenger") || "";
 
     var status = document.getElementById("formular-status");
     var entwurfszeile = document.getElementById("formular-entwurf");
     var verwerfen = document.getElementById("entwurf-verwerfen");
+    var knopf = formular.querySelector("button[type=submit]");
 
     /* Die Einwilligung wird bewusst nicht gesichert: ein aus einer
        früheren Sitzung wiederhergestelltes Häkchen wäre keine Einwilligung. */
@@ -104,18 +109,96 @@
       melden("Zwischengespeicherte Eingaben von diesem Gerät wiederhergestellt.");
     };
 
-    var archivieren = function (daten) {
-      var bisher = lesen(ARCHIV);
-      if (!Array.isArray(bisher)) bisher = [];
-      bisher.push(daten);
-      schreiben(ARCHIV, bisher.slice(-ARCHIV_MAX));
+    /* --- Protokoll: jeder Terminwunsch steht hier, bis er quittiert ist. --- */
+    var protokollLesen = function () {
+      var liste = lesen(PROTOKOLL);
+      return Array.isArray(liste) ? liste : [];
     };
 
-    var zeile = function (name, wert) {
-      return wert ? name + ": " + wert + "\n" : "";
+    var protokollSchreiben = function (liste) {
+      schreiben(PROTOKOLL, liste.slice(-PROTOKOLL_MAX));
+    };
+
+    var protokollErgaenzen = function (eintrag) {
+      var liste = protokollLesen();
+      liste.push(eintrag);
+      protokollSchreiben(liste);
+    };
+
+    var protokollQuittieren = function (id) {
+      var liste = protokollLesen().map(function (eintrag) {
+        if (eintrag.id === id) {
+          eintrag.gesendet = true;
+          eintrag.uebermittelt = new Date().toISOString();
+        }
+        return eintrag;
+      });
+      protokollSchreiben(liste);
+    };
+
+    /* --- Übermittlung --- */
+    var uebermitteln = function (eintrag) {
+      if (!endpunkt) return Promise.reject(new Error("Kein Endpunkt hinterlegt."));
+
+      return window.fetch(endpunkt, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          _subject: "Terminwunsch" + (eintrag.haus ? ": " + eintrag.haus : ""),
+          _template: "table",
+          _captcha: "false",
+          _replyto: eintrag.email,
+          Name: eintrag.name,
+          Haus: eintrag.haus,
+          "E-Mail": eintrag.email,
+          Telefon: eintrag.telefon || "—",
+          Zeitfenster: eintrag.zeitfenster,
+          Kontext: eintrag.nachricht || "—",
+          Erfasst: eintrag.zeitpunkt,
+          Seite: window.location.href
+        })
+      }).then(function (antwort) {
+        return antwort.json().catch(function () {
+          return {};
+        }).then(function (daten) {
+          if (!antwort.ok || String(daten.success) === "false") {
+            throw new Error(daten.message || "Der Dienst hat die Übermittlung abgelehnt.");
+          }
+          return daten;
+        });
+      });
+    };
+
+    var arbeitet = function (ja) {
+      if (!knopf) return;
+      knopf.disabled = ja;
+      knopf.textContent = ja ? "Wird übermittelt …" : "Terminwunsch senden";
+    };
+
+    /* Liegengebliebene Terminwünsche still nachreichen. */
+    var nachreichen = function () {
+      var offen = protokollLesen().filter(function (eintrag) {
+        return !eintrag.gesendet;
+      });
+      if (!offen.length) return;
+
+      offen.reduce(function (kette, eintrag) {
+        return kette.then(function () {
+          return uebermitteln(eintrag).then(function () {
+            protokollQuittieren(eintrag.id);
+            melden("Ein zwischengespeicherter Terminwunsch wurde nachträglich übermittelt.");
+          });
+        });
+      }, Promise.resolve()).catch(function () {
+        /* Bleibt im Protokoll und wird beim nächsten Aufruf erneut versucht. */
+      });
     };
 
     entwurfLaden();
+    nachreichen();
 
     formular.addEventListener("input", entwurfSichern);
     formular.addEventListener("change", entwurfSichern);
@@ -142,31 +225,37 @@
       }
 
       var daten = new FormData(formular);
-      var empfaenger = formular.getAttribute("data-mail") || "";
-      var haus = daten.get("haus") || "";
-
-      var text =
-        zeile("Name", daten.get("name")) +
-        zeile("Haus", haus) +
-        zeile("E-Mail", daten.get("email")) +
-        zeile("Telefon", daten.get("telefon")) +
-        zeile("Zeitfenster", daten.get("zeitfenster")) +
-        "\n" + (daten.get("nachricht") || "");
-
-      var eintrag = { gesendet: new Date().toISOString() };
+      var eintrag = {
+        id: "tw-" + Date.now(),
+        zeitpunkt: new Date().toISOString(),
+        gesendet: false
+      };
       felder.forEach(function (name) {
         eintrag[name] = daten.get(name) || "";
       });
-      archivieren(eintrag);
 
-      window.location.href =
-        "mailto:" + empfaenger +
-        "?subject=" + encodeURIComponent("Terminwunsch" + (haus ? ": " + haus : "")) +
-        "&body=" + encodeURIComponent(text);
+      protokollErgaenzen(eintrag);
+      arbeitet(true);
+      melden("Wird übermittelt …");
 
-      loeschen(ENTWURF);
-      entwurfAnzeigen(false);
-      melden("E-Mail an " + empfaenger + " wird vorbereitet — bitte dort noch abschicken.");
+      uebermitteln(eintrag).then(function () {
+        protokollQuittieren(eintrag.id);
+        loeschen(ENTWURF);
+        formular.reset();
+        formular.classList.remove("ist-geprueft");
+        entwurfAnzeigen(false);
+        melden("Angekommen — der Terminwunsch liegt bei Lucas Beneke. " +
+               "Antwort in der Regel am nächsten Werktag.");
+      }).catch(function (fehler) {
+        melden(
+          "Übermittlung fehlgeschlagen (" + fehler.message + "). " +
+          "Der Terminwunsch bleibt auf diesem Gerät gespeichert und wird beim nächsten " +
+          "Aufruf erneut gesendet." + (empfaenger ? " Direkt: " + empfaenger : ""),
+          true
+        );
+      }).then(function () {
+        arbeitet(false);
+      });
     });
   }
 
