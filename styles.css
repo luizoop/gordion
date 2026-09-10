@@ -635,6 +635,11 @@ section {
   cursor: pointer;
 }
 
+.formular .knopf[disabled] {
+  background: var(--grau);
+  cursor: progress;
+}
+
 .formular__status {
   font-size: var(--fs-klein);
   color: var(--grau);
