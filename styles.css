@@ -1,0 +1,715 @@
+/* ==========================================================================
+   Token
+   ========================================================================== */
+:root {
+  /* Farben */
+  --papier:     #FFFFFF;
+  --blatt:      #F7F8F9;
+  --linie:      #DFE3E8;
+  --tinte:      #132133;
+  --grau:       #5C6875;
+  --referenz:   #0B4F9E;
+  --abweichung: #B0102F;
+
+  /* Typografie */
+  --schrift: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --fs-hero:  clamp(2.6rem, 5.2vw, 4.2rem);
+  --fs-h2:    2.1rem;
+  --fs-h3:    1.15rem;
+  --fs-text:  1.0625rem;
+  --fs-klein: 0.875rem;
+
+  /* Raster und Abstände */
+  --breite-container: 1120px;
+  --pad-inline: clamp(20px, 5vw, 64px);
+  --raum-sektion: clamp(88px, 11vw, 148px);
+  --raum-kopf: 64px;
+  --raum-1: 8px;
+  --raum-2: 16px;
+  --raum-3: 24px;
+  --raum-4: 40px;
+  --raum-5: 64px;
+  --spalte-text: 62ch;
+
+  --haarlinie: 1px solid var(--linie);
+  --radius: 2px;
+}
+
+/* ==========================================================================
+   Grundlagen
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: var(--raum-kopf);
+}
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--tinte);
+  font-family: var(--schrift);
+  font-size: var(--fs-text);
+  font-weight: 400;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, ul, ol, figure, table { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+
+a { color: var(--referenz); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+:focus-visible {
+  outline: 2px solid var(--referenz);
+  outline-offset: 2px;
+}
+
+.zahl { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.behaelter {
+  max-width: var(--breite-container);
+  margin-inline: auto;
+  padding-inline: var(--pad-inline);
+}
+
+h1 {
+  font-size: var(--fs-hero);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+/* Unterseiten: h1 eine Stufe unter der Startseiten-Headline. */
+.seitentitel {
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+}
+
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.fliesstext {
+  max-width: var(--spalte-text);
+}
+
+.klein {
+  font-size: var(--fs-klein);
+  color: var(--grau);
+  max-width: var(--spalte-text);
+}
+
+/* Vertikaler Rhythmus ausschliesslich nach unten fliessend,
+   damit die padding-block der Sektionen nicht unterlaufen werden. */
+section > .behaelter > * + *,
+.hero__text > * + * { margin-top: var(--raum-3); }
+
+section > .behaelter > h2 + .fliesstext,
+.hero__text > h1 + .fliesstext { margin-top: var(--raum-4); }
+
+section > .behaelter > .fliesstext + .fliesstext { margin-top: var(--raum-2); }
+
+section > .behaelter > .gegenueber,
+section > .behaelter > .rechtsstand,
+section > .behaelter > .ablauf,
+section > .behaelter > .merkmale,
+section > .behaelter > .gruender,
+section > .behaelter > .gespraech,
+section > .behaelter > .merkmale + .fliesstext { margin-top: var(--raum-5); }
+
+.hero__text > .aktionen { margin-top: var(--raum-4); }
+
+/* ==========================================================================
+   Sticky-Header
+   ========================================================================== */
+.kopf {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--papier);
+}
+
+.kopf.ist-gescrollt { box-shadow: 0 1px 0 var(--linie); }
+
+.kopf__innen {
+  height: var(--raum-kopf);
+  display: flex;
+  align-items: center;
+  gap: var(--raum-4);
+}
+
+.wortmarke {
+  display: block;
+  color: var(--tinte);
+  text-decoration: none;
+}
+
+.wortmarke__bild {
+  display: block;
+  height: 18px;
+  width: auto;
+}
+
+.kopf__nav {
+  margin-left: auto;
+  display: flex;
+  gap: var(--raum-3);
+  font-size: var(--fs-klein);
+}
+
+.kopf__nav a {
+  color: var(--grau);
+  text-decoration: none;
+}
+
+.kopf__nav a:hover { color: var(--tinte); }
+
+/* ==========================================================================
+   Knöpfe und Links
+   ========================================================================== */
+.knopf {
+  display: inline-block;
+  background: var(--tinte);
+  color: var(--papier);
+  font-size: var(--fs-klein);
+  font-weight: 500;
+  line-height: 1;
+  padding: 13px 20px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.knopf:hover { background: var(--grau); }
+
+.textlink {
+  font-size: var(--fs-klein);
+  font-weight: 500;
+  color: var(--referenz);
+}
+
+/* ==========================================================================
+   Sektionen
+   ========================================================================== */
+.hero { padding-block: clamp(64px, 8vw, 104px) var(--raum-sektion); }
+
+section {
+  padding-block: var(--raum-sektion);
+  border-top: var(--haarlinie);
+}
+
+.band { background: var(--blatt); }
+
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+.hero__innen {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
+  gap: clamp(40px, 6vw, 80px);
+  align-items: start;
+}
+
+.aktionen {
+  display: flex;
+  align-items: center;
+  gap: var(--raum-3);
+  flex-wrap: wrap;
+}
+
+.hero__text > .klein { margin-top: var(--raum-3); }
+
+.hero__grafik { margin: 0; }
+
+.hero-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero__zaehler { margin-top: var(--raum-2); }
+
+.hero__zaehlerzeile {
+  font-size: var(--fs-text);
+  opacity: 0;
+  animation: einblenden 0.5s linear 3.2s forwards;
+}
+
+.hero__zaehler .klein { margin-top: var(--raum-1); }
+
+/* --- Achsen und Beschriftung --- */
+.hero-svg__achsen line {
+  stroke: var(--linie);
+  stroke-width: 1;
+}
+
+.hero-svg__zeit text,
+.hero-svg__preis text {
+  fill: var(--grau);
+  font-family: var(--schrift);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-svg__zeit text { text-anchor: middle; }
+.hero-svg__preis text { text-anchor: end; }
+
+/* --- Phase 1: Ausführungen --- */
+.hero-svg__punkte circle,
+.hero-svg__abweichungen circle {
+  fill: var(--grau);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: einblenden 0.18s linear calc(var(--i) * 25ms) forwards;
+}
+
+/* --- Phase 2: Referenzlinie --- */
+.hero-svg__referenz {
+  fill: none;
+  stroke: var(--referenz);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 470;
+  stroke-dashoffset: 470;
+  animation: linie-zeichnen 1.2s ease-out 1.2s forwards;
+}
+
+.hero-svg__referenzlabel {
+  fill: var(--referenz);
+  font-family: var(--schrift);
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  animation: einblenden 0.4s linear 2.2s forwards;
+}
+
+/* --- Phase 3: Abweichungen --- */
+.hero-svg__abweichungen circle {
+  animation:
+    einblenden 0.18s linear calc(var(--i) * 25ms) forwards,
+    markieren 0.5s ease-out 2.4s forwards;
+}
+
+.hero-svg__fall line {
+  stroke: var(--abweichung);
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: linie-zeichnen 0.4s ease-out 2.6s forwards;
+}
+
+@keyframes einblenden {
+  to { opacity: 1; }
+}
+
+@keyframes linie-zeichnen {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes markieren {
+  to { fill: var(--abweichung); transform: scale(1.6667); }
+}
+
+/* ==========================================================================
+   Gegenüberstellung
+   ========================================================================== */
+.gegenueber {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.gegenueber th {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  padding: 0 var(--raum-4) var(--raum-2) 0;
+  border-bottom: var(--haarlinie);
+}
+
+.gegenueber td {
+  padding: var(--raum-2) var(--raum-4) var(--raum-2) 0;
+  border-bottom: var(--haarlinie);
+  vertical-align: top;
+}
+
+.gegenueber th:first-child,
+.gegenueber td:first-child {
+  border-right: var(--haarlinie);
+  width: 50%;
+}
+
+.gegenueber th:last-child,
+.gegenueber td:last-child { padding-left: var(--raum-4); }
+
+.rechtsstand {
+  max-width: var(--spalte-text);
+  font-size: var(--fs-klein);
+  color: var(--grau);
+  border-left: var(--haarlinie);
+  padding-left: var(--raum-3);
+}
+
+.rechtsstand strong { font-weight: 600; }
+
+/* ==========================================================================
+   Ablauf und Leistungsmerkmale
+   ========================================================================== */
+.ablauf li {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--raum-3);
+  padding-block: var(--raum-3);
+}
+
+.ablauf li + li { border-top: var(--haarlinie); }
+
+.ablauf__nr { color: var(--grau); }
+
+.ablauf__titel { font-weight: 600; }
+
+.merkmale {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--raum-5);
+}
+
+.merkmale li {
+  padding-block: var(--raum-2);
+}
+
+/* Haarlinie nur zwischen den Zeilen, zweispaltig also ab dem dritten Eintrag */
+.merkmale li:nth-child(n + 3) { border-top: var(--haarlinie); }
+
+/* ==========================================================================
+   Ansprechpartner
+   ========================================================================== */
+.gruender {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--raum-5);
+}
+
+.gruender__person > * + * { margin-top: var(--raum-2); }
+.gruender__person > picture + h3 { margin-top: var(--raum-3); }
+
+.gruender__person picture { display: block; }
+
+.gruender__bild {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--radius);
+}
+
+.gruender__person h3 { margin-top: 0; }
+
+.rolle {
+  font-size: var(--fs-klein);
+  color: var(--grau);
+}
+
+.gruender__person .fliesstext { max-width: 42ch; }
+
+/* ==========================================================================
+   Gespräch vereinbaren
+   ========================================================================== */
+.seite { border-top: 0; }
+
+.gespraech {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  gap: clamp(40px, 6vw, 80px);
+  align-items: start;
+}
+
+.gespraech__spalte > * + * { margin-top: var(--raum-4); }
+
+.gespraech__untertitel {
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.gespraech__untertitel + .klein { margin-top: var(--raum-1); }
+
+.gespraech__alternative { margin-top: var(--raum-3); }
+
+/* --- Agenda: gleiche Machart wie der Ablauf, nur ohne eigene Sektion --- */
+.agenda li {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--raum-3);
+  padding-block: var(--raum-3);
+}
+
+.agenda li + li { border-top: var(--haarlinie); }
+
+.agenda__nr { color: var(--grau); }
+
+.agenda__titel { font-weight: 600; }
+
+/* --- Fakten: Definitionsliste, zweispaltig --- */
+.fakten__zeile {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: var(--raum-3);
+  padding-block: var(--raum-2);
+  border-top: var(--haarlinie);
+}
+
+.fakten__zeile:last-child { border-bottom: var(--haarlinie); }
+
+.fakten dt {
+  font-size: var(--fs-klein);
+  color: var(--grau);
+}
+
+.fakten dd { margin: 0; }
+
+/* ==========================================================================
+   Formular
+   ========================================================================== */
+.karte {
+  background: var(--papier);
+  border: var(--haarlinie);
+  border-radius: var(--radius);
+  padding: clamp(24px, 3vw, 40px);
+}
+
+.formular {
+  margin-top: var(--raum-4);
+  display: grid;
+  gap: var(--raum-3);
+}
+
+.feld {
+  display: grid;
+  gap: var(--raum-1);
+}
+
+.feld label {
+  font-size: var(--fs-klein);
+  font-weight: 500;
+}
+
+.feld__zusatz {
+  font-weight: 400;
+  color: var(--grau);
+}
+
+.feld input,
+.feld select,
+.feld textarea {
+  width: 100%;
+  font-family: var(--schrift);
+  font-size: var(--fs-text);
+  line-height: 1.5;
+  color: var(--tinte);
+  background: var(--papier);
+  border: var(--haarlinie);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.feld textarea { resize: vertical; }
+
+.feld input:hover,
+.feld select:hover,
+.feld textarea:hover { border-color: var(--grau); }
+
+.feld input:focus-visible,
+.feld select:focus-visible,
+.feld textarea:focus-visible {
+  border-color: var(--referenz);
+  outline-offset: 0;
+}
+
+.feld ::placeholder { color: var(--grau); opacity: 1; }
+
+/* Ungültige Eingaben erst nach dem Absenden markieren, nicht beim Tippen. */
+.formular.ist-geprueft :invalid { border-color: var(--abweichung); }
+.formular.ist-geprueft .feld--kontroll:has(:invalid) label { color: var(--abweichung); }
+
+.feld--kontroll {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--raum-2);
+  align-items: start;
+  margin-top: var(--raum-1);
+}
+
+.feld--kontroll input {
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  accent-color: var(--referenz);
+}
+
+.feld--kontroll label {
+  font-size: var(--fs-klein);
+  font-weight: 400;
+  color: var(--grau);
+}
+
+.formular .knopf {
+  justify-self: start;
+  margin-top: var(--raum-1);
+  border: 0;
+  cursor: pointer;
+}
+
+.formular__status {
+  font-size: var(--fs-klein);
+  color: var(--grau);
+}
+
+.formular__status:empty { display: none; }
+
+.formular__status.ist-fehler { color: var(--abweichung); }
+
+.formular__entwurf {
+  font-size: var(--fs-klein);
+  color: var(--grau);
+  border-top: var(--haarlinie);
+  padding-top: var(--raum-2);
+}
+
+/* Knopf in Linkgestalt, für Nebenhandlungen im Formular. */
+.textknopf {
+  font-family: var(--schrift);
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--referenz);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.textknopf:hover { color: var(--tinte); }
+
+.rechtsstand code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.fuss {
+  background: var(--blatt);
+  padding-block: var(--raum-5);
+}
+
+.fuss__innen {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--raum-4);
+  align-items: start;
+}
+
+.fuss .klein { margin-top: var(--raum-1); }
+
+.fuss__links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--raum-1);
+  font-size: var(--fs-klein);
+}
+
+/* ==========================================================================
+   Breakpoints
+   ========================================================================== */
+@media (max-width: 900px) {
+  .hero__innen { grid-template-columns: minmax(0, 1fr); }
+  .gespraech { grid-template-columns: minmax(0, 1fr); }
+  .hero-svg { height: 260px; }
+  .kopf__nav { display: none; }
+  .kopf__cta { margin-left: auto; }
+}
+
+@media (max-width: 640px) {
+  /* Die Tabelle in 1.3 gibt Desktop-Größen an; schmale Viewports
+     brauchen kleinere Stufen, sonst bricht die Headline aus. */
+  :root {
+    --fs-hero: clamp(2rem, 7.6vw, 2.6rem);
+    --fs-h2: 1.7rem;
+  }
+
+  .gegenueber,
+  .gegenueber thead,
+  .gegenueber tbody,
+  .gegenueber tr,
+  .gegenueber th,
+  .gegenueber td { display: block; width: 100%; }
+
+  .gegenueber thead { display: none; }
+
+  .gegenueber td {
+    border-right: 0;
+    padding: var(--raum-2) 0;
+  }
+
+  .gegenueber td:first-child { border-bottom: 0; padding-bottom: var(--raum-1); }
+  .gegenueber td:last-child { padding-left: 0; color: var(--grau); }
+
+  .ablauf li,
+  .agenda li { grid-template-columns: 40px minmax(0, 1fr); gap: var(--raum-2); }
+
+  .fakten__zeile { grid-template-columns: minmax(0, 1fr); gap: 0; }
+
+  .kopf__innen { gap: var(--raum-3); }
+
+  .merkmale { grid-template-columns: minmax(0, 1fr); }
+  .merkmale li:nth-child(2) { border-top: var(--haarlinie); }
+
+  .gruender { grid-template-columns: minmax(0, 1fr); gap: var(--raum-5); }
+  .gruender__bild { width: 180px; }
+
+  .fuss__innen { grid-template-columns: minmax(0, 1fr); gap: var(--raum-3); }
+}
+
+/* ==========================================================================
+   Reduzierte Bewegung: Endzustand direkt
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .hero__zaehlerzeile,
+  .hero-svg__punkte circle,
+  .hero-svg__abweichungen circle,
+  .hero-svg__referenz,
+  .hero-svg__referenzlabel,
+  .hero-svg__fall line { animation: none; }
+
+  .hero__zaehlerzeile,
+  .hero-svg__punkte circle,
+  .hero-svg__referenzlabel { opacity: 1; }
+
+  .hero-svg__referenz,
+  .hero-svg__fall line { stroke-dashoffset: 0; }
+
+  .hero-svg__abweichungen circle {
+    opacity: 1;
+    fill: var(--abweichung);
+    transform: scale(1.6667);
+  }
+}

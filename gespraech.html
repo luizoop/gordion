@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gespräch vereinbaren — {{FIRMENNAME}}</title>
+<meta name="description" content="20 Minuten, um zu klären, ob sich der Abgleich der Ausführungspreise gegen das EU Consolidated Tape für euer Haus lohnt.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="kopf" id="kopf">
+  <div class="behaelter kopf__innen">
+    <a class="wortmarke" href="index.html">{{FIRMENNAME}}</a>
+    <nav class="kopf__nav" aria-label="Hauptnavigation">
+      <a href="index.html#regulierung">Regulierung</a>
+      <a href="index.html#leistung">Leistung</a>
+      <a href="index.html#ansprechpartner">Ansprechpartner</a>
+    </nav>
+    <a class="textlink kopf__cta" href="index.html">Zurück zur Startseite</a>
+  </div>
+</header>
+
+<main>
+
+  <section class="seite" aria-labelledby="gespraech-titel">
+    <div class="behaelter">
+      <h1 class="seitentitel" id="gespraech-titel">Gespräch vereinbaren</h1>
+      <p class="fliesstext">20 Minuten reichen, um zu klären, ob sich der Abgleich für euer Haus lohnt. Kein Vertrieb, keine Präsentation — wir schauen uns an, wie eure Ausführungsdaten aussehen und was ein Abgleich daraus machen würde.</p>
+
+      <div class="gespraech">
+
+        <div class="gespraech__spalte">
+          <h2 class="gespraech__untertitel">Worüber wir sprechen</h2>
+          <ol class="agenda">
+            <li>
+              <span class="agenda__nr zahl">01</span>
+              <span class="agenda__inhalt"><span class="agenda__titel">Ausgangslage</span> — welche Instrumente ihr handelt, über welche Handelsplätze und wie eure Ausführungsgrundsätze heute formuliert sind.</span>
+            </li>
+            <li>
+              <span class="agenda__nr zahl">02</span>
+              <span class="agenda__inhalt"><span class="agenda__titel">Datenlage</span> — welche Felder euer Bestandssystem hergibt und ob die Zeitstempel für einen Abgleich taugen.</span>
+            </li>
+            <li>
+              <span class="agenda__nr zahl">03</span>
+              <span class="agenda__inhalt"><span class="agenda__titel">Nächster Schritt</span> — ob ein Probeabgleich auf einem Quartal eurer Daten sinnvoll ist, und was er kostet.</span>
+            </li>
+          </ol>
+
+          <dl class="fakten">
+            <div class="fakten__zeile">
+              <dt>Dauer</dt>
+              <dd>20 Minuten, Video oder Telefon</dd>
+            </div>
+            <div class="fakten__zeile">
+              <dt>Gesprächspartner</dt>
+              <dd>Lucas Beneke und Leon Brandt — die Gründer, kein Vertriebsteam</dd>
+            </div>
+            <div class="fakten__zeile">
+              <dt>Vorbereitung</dt>
+              <dd>Keine. Unterlagen braucht es erst für den Probeabgleich.</dd>
+            </div>
+            <div class="fakten__zeile">
+              <dt>Antwort</dt>
+              <dd>In der Regel am nächsten Werktag</dd>
+            </div>
+          </dl>
+
+          <p class="klein">Lieber direkt schreiben? <a href="mailto:lucas-beneke@gordion.io">lucas-beneke@gordion.io</a></p>
+        </div>
+
+        <div class="gespraech__spalte">
+          <div class="karte">
+            <h2 class="gespraech__untertitel">Terminwunsch senden</h2>
+            <p class="klein">Wir melden uns mit zwei konkreten Terminvorschlägen zurück.</p>
+
+            <form class="formular" id="gespraech-formular"
+                  action="mailto:lucas-beneke@gordion.io" method="post" enctype="text/plain"
+                  data-mail="lucas-beneke@gordion.io" novalidate>
+              <div class="feld">
+                <label for="f-name">Name</label>
+                <input id="f-name" name="name" type="text" autocomplete="name" required>
+              </div>
+
+              <div class="feld">
+                <label for="f-haus">Haus <span class="feld__zusatz">Institut, Verwaltung, Boutique</span></label>
+                <input id="f-haus" name="haus" type="text" autocomplete="organization" required>
+              </div>
+
+              <div class="feld">
+                <label for="f-mail">E-Mail</label>
+                <input id="f-mail" name="email" type="email" autocomplete="email" required>
+              </div>
+
+              <div class="feld">
+                <label for="f-telefon">Telefon <span class="feld__zusatz">optional</span></label>
+                <input id="f-telefon" name="telefon" type="tel" autocomplete="tel">
+              </div>
+
+              <div class="feld">
+                <label for="f-zeit">Wann passt es euch?</label>
+                <select id="f-zeit" name="zeitfenster">
+                  <option value="Vormittags (09–12 Uhr)">Vormittags, 09–12 Uhr</option>
+                  <option value="Mittags (12–14 Uhr)">Mittags, 12–14 Uhr</option>
+                  <option value="Nachmittags (14–18 Uhr)">Nachmittags, 14–18 Uhr</option>
+                  <option value="Keine Präferenz">Keine Präferenz</option>
+                </select>
+              </div>
+
+              <div class="feld">
+                <label for="f-nachricht">Kontext <span class="feld__zusatz">optional</span></label>
+                <textarea id="f-nachricht" name="nachricht" rows="4" placeholder="Zum Beispiel: welche Instrumente, welches Bestandssystem, welcher Zeitdruck."></textarea>
+              </div>
+
+              <div class="feld feld--kontroll">
+                <input id="f-einwilligung" name="einwilligung" type="checkbox" required>
+                <label for="f-einwilligung">Ich bin damit einverstanden, dass meine Angaben zur Beantwortung dieser Anfrage verarbeitet werden. Näheres in der <a href="datenschutz.html">Datenschutzerklärung</a>.</label>
+              </div>
+
+              <button class="knopf" type="submit">Terminwunsch senden</button>
+
+              <p class="formular__status" id="formular-status" role="status" aria-live="polite"></p>
+
+              <p class="formular__entwurf" id="formular-entwurf" hidden>
+                Eingaben werden auf diesem Gerät zwischengespeichert.
+                <button class="textknopf" type="button" id="entwurf-verwerfen">Entwurf verwerfen</button>
+              </p>
+            </form>
+          </div>
+
+          <p class="klein gespraech__alternative">Oder direkt einen freien Slot im Kalender wählen: <a href="{{CAL_LINK}}">Kalender öffnen</a></p>
+        </div>
+
+      </div>
+
+      <p class="rechtsstand">Das Formular läuft ohne Server: Eingaben bleiben im Browser des Besuchers, der Terminwunsch geht als vorbereitete E-Mail an <a href="mailto:lucas-beneke@gordion.io">lucas-beneke@gordion.io</a> und wird erst vom Absender selbst verschickt. ⚠️ <strong>Vor Livegang prüfen und ergänzen:</strong> <code>{{CAL_LINK}}</code> auf den Buchungskalender setzen; für einen serverseitigen Empfang später einen Formular-Endpunkt ergänzen.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="fuss">
+  <div class="behaelter fuss__innen">
+    <div>
+      <p class="wortmarke">{{FIRMENNAME}}</p>
+      <p class="klein">Unabhängige Verifizierung von Ausführungspreisen gegen das EU Consolidated Tape.</p>
+    </div>
+    <nav class="fuss__links" aria-label="Rechtliches">
+      <a href="impressum.html">Impressum</a>
+      <a href="datenschutz.html">Datenschutzerklärung</a>
+    </nav>
+    <p class="klein">© 2026 {{FIRMENNAME}}</p>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
