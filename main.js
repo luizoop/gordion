@@ -247,10 +247,15 @@
         melden("Angekommen — der Terminwunsch liegt bei Lucas Beneke. " +
                "Antwort in der Regel am nächsten Werktag.");
       }).catch(function (fehler) {
+        /* Die Rohmeldung des Dienstes gehört in die Konsole, nicht vor den Besucher. */
+        if (window.console) window.console.warn("Terminwunsch nicht übermittelt:", fehler.message);
+
         melden(
-          "Übermittlung fehlgeschlagen (" + fehler.message + "). " +
-          "Der Terminwunsch bleibt auf diesem Gerät gespeichert und wird beim nächsten " +
-          "Aufruf erneut gesendet." + (empfaenger ? " Direkt: " + empfaenger : ""),
+          (/activat/i.test(fehler.message)
+            ? "Der Versandweg ist noch nicht freigeschaltet."
+            : "Die Übermittlung hat gerade nicht geklappt.") +
+          " Der Terminwunsch ist auf diesem Gerät gespeichert und wird beim nächsten " +
+          "Aufruf automatisch erneut gesendet." + (empfaenger ? " Direkt: " + empfaenger : ""),
           true
         );
       }).then(function () {
