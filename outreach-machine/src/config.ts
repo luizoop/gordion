@@ -16,6 +16,10 @@ const envSchema = z
       .default("info"),
     DATABASE_URL: z.string().min(1),
     ADMIN_API_KEY: z.string().min(32),
+    LOCAL_DASHBOARD_ENABLED: booleanFromString.default(false),
+    MAILBOX_CONNECTION_ID: optionalUuid,
+    OPERATOR_PASSWORD_HASH: z.string().regex(/^scrypt:[a-f0-9]{32}:[a-f0-9]{128}$/).optional(),
+    RESEARCH_IMPORT_API_KEY: z.string().min(32).optional(),
     MAIL_PROVIDER: z.enum(["simulated", "microsoft_graph"]).default("simulated"),
     LIVE_SEND_ENABLED: booleanFromString.default(false),
     GRAPH_AUTH_MODE: z.enum(["app_only", "delegated"]).default("app_only"),
@@ -32,6 +36,12 @@ const envSchema = z
     PUBLIC_BASE_URL: z.url().optional(),
   })
   .superRefine((env, context) => {
+    if (env.LOCAL_DASHBOARD_ENABLED && (env.HOST !== '127.0.0.1' || ((env.MAIL_PROVIDER !== 'simulated' || env.LIVE_SEND_ENABLED) && !env.OPERATOR_PASSWORD_HASH))) {
+      context.addIssue({ code: 'custom', message: 'Local dashboard requires loopback and operator authentication for Graph' });
+    }
+    if (env.RESEARCH_IMPORT_API_KEY && env.RESEARCH_IMPORT_API_KEY === env.ADMIN_API_KEY) {
+      context.addIssue({ code: 'custom', message: 'Research and admin keys must be different' });
+    }
     if (env.MAIL_PROVIDER !== "microsoft_graph") return;
 
     const required: Array<keyof typeof env> = [

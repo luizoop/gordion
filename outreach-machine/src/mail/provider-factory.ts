@@ -4,8 +4,10 @@ import { MicrosoftGraphMailProvider } from "./microsoft-graph-provider.js";
 import { SimulatedMailProvider } from "./simulated-provider.js";
 import { AppOnlyMsalTokenProvider } from "./token-provider.js";
 import { readMailboxEvidence } from "./mailbox-identity.js";
+import type { Database } from '../db.js';
+import { loadLogoAsset } from './logo-assets.js';
 
-export function createMailProvider(config: AppConfig): MailProvider {
+export function createMailProvider(config: AppConfig,sql?:Database): MailProvider {
   if (config.MAIL_PROVIDER === "simulated") return new SimulatedMailProvider();
 
   if (config.GRAPH_AUTH_MODE === "delegated") {
@@ -35,6 +37,7 @@ export function createMailProvider(config: AppConfig): MailProvider {
     tokenProvider: new AppOnlyMsalTokenProvider({ tenantId, clientId, ...credential }),
     accessStage: config.GRAPH_ACCESS_STAGE,
     liveSendEnabled: config.LIVE_SEND_ENABLED,
+    ...(sql?{loadLogo:(sha256:string)=>loadLogoAsset(sql,sha256)}:{}),
   });
 }
 

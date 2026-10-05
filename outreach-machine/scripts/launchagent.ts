@@ -1,0 +1,15 @@
+import { mkdir,writeFile,access } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { homedir } from 'node:os';
+import path from 'node:path';
+if(process.platform!=='darwin') throw new Error('LaunchAgent requires macOS');
+const root=process.cwd();await access(path.join(root,'scripts/supervisor.ts'));
+const escape=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const data=path.join(root,'.outreach-data');await mkdir(data,{recursive:true,mode:0o700});
+const args=[process.execPath,'--env-file-if-exists=.env','--env-file-if-exists=.outreach-data/operator.env','--import','tsx','scripts/supervisor.ts',...(process.argv.includes('--keep-awake')?['--keep-awake']:[])];
+const plist=`<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict><key>Label</key><string>io.gordion.outreach</string><key>ProgramArguments</key><array>${args.map(a=>`<string>${escape(a)}</string>`).join('')}</array><key>WorkingDirectory</key><string>${escape(root)}</string><key>RunAtLoad</key><true/><key>ThrottleInterval</key><integer>60</integer><key>StandardOutPath</key><string>${escape(path.join(data,'supervisor.log'))}</string><key>StandardErrorPath</key><string>${escape(path.join(data,'supervisor-error.log'))}</string></dict></plist>`;
+const target=process.argv.includes('--install')?path.join(homedir(),'Library/LaunchAgents/io.gordion.outreach.plist'):path.join(data,'io.gordion.outreach.plist');
+await mkdir(path.dirname(target),{recursive:true,mode:0o700});await writeFile(target,plist,{flag:'wx',mode:0o600});
+execFileSync('/usr/bin/plutil',['-lint',target],{stdio:'inherit'});
+if(process.argv.includes('--install')) execFileSync('/bin/launchctl',['bootstrap',`gui/${process.getuid!()}`,target],{stdio:'inherit'});
+console.log(process.argv.includes('--install')?'Login startup installed; runtime still starts paused.':`LaunchAgent prepared at ${target}; not installed.`);

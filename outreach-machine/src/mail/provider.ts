@@ -3,6 +3,7 @@ export interface OutboundMessage {
   recipientAddress: string;
   subject: string;
   bodyText: string;
+  logoSha256?: string | null;
 }
 
 export interface ProviderMessage {
@@ -13,6 +14,12 @@ export interface ProviderMessage {
   subject: string;
   bodyText: string;
   recipientAddresses: string[];
+  logoSha256?: string | null;
+  parentFolderId?: string | null;
+  sentDateTime?: string | null;
+  ccAddresses?: string[];
+  bccAddresses?: string[];
+  correlationId?: string | null;
 }
 
 export interface DeltaMessage {
@@ -24,6 +31,10 @@ export interface DeltaMessage {
   receivedDateTime: string | null;
   isDraft: boolean;
   bodyPreview: string | null;
+  removed?: boolean;
+  sentDateTime?: string | null;
+  recipientAddresses?: string[];
+  headers?: Array<{name:string;value:string}>;
 }
 
 export interface DeltaPage {
@@ -36,8 +47,21 @@ export interface MailProvider {
   readonly name: "simulated" | "microsoft_graph";
   createDraft(message: OutboundMessage): Promise<ProviderMessage>;
   sendDraft(providerMessageId: string): Promise<{ requestId: string | null }>;
-  getMessage(providerMessageId: string): Promise<ProviderMessage | null>;
-  getDeltaPage(folder: "inbox" | "sentitems" | "drafts", cursor?: string): Promise<DeltaPage>;
+  getMessage(
+    providerMessageId: string,
+    withLogo?: boolean,
+  ): Promise<ProviderMessage | null>;
+  getDeltaPage(
+    folder: string,
+    cursor?: string,
+  ): Promise<DeltaPage>;
+}
+
+export interface AutopilotMailProvider extends MailProvider {
+  listFolders(): Promise<Array<{id:string;kind:'inbound'|'sent'|'drafts'|'ignored'}>>;
+  findByCorrelation(id:string): Promise<string[]>;
+  createReplyDraft(parentId:string,message:OutboundMessage): Promise<ProviderMessage>;
+  getMime(id:string): Promise<string>;
 }
 
 export class ProviderError extends Error {

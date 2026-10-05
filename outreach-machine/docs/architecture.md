@@ -1,10 +1,10 @@
 # Architektur des Outreach-Funnels
 
-Stand: 23. September 2026
+Stand: 24. September 2026
 
 ## Umsetzungsstand
 
-Dieses Dokument beschreibt das Zielbild. Implementiert sind Backend-Schema, interne API, Simulator, grundlegende Queue-/Freigabelogik sowie ein standardmäßig schreibgeschützter Graph-Adapter mit Zertifikatanmeldung. Scheduler, Review-Oberfläche, automatische Subscription-Erneuerung und ein vollständiger Reconciliation-Worker sind noch nicht fertig. Die unten genannten Betriebs- und Doppelsendgarantien sind vor Produktivversand gesondert abzunehmen; sie sind nicht durch die bisherigen Unit-Tests nachgewiesen.
+Dieses Dokument beschreibt das Zielbild. Implementiert sind Backend-Schema, interne API, Simulator, grundlegende Queue-/Freigabelogik, eine lokale Review-Oberfläche mit JSON-Import, automatische regelgebundene Nachrichtenvorbereitung sowie ein standardmäßig schreibgeschützter Graph-Adapter mit Zertifikatanmeldung. Autonome Recherche, produktiver Versand-/Follow-up-Scheduler, automatische Subscription-Erneuerung und ein vollständiger Reconciliation-Worker sind noch nicht fertig. Die unten genannten Betriebs- und Doppelsendgarantien sind vor Produktivversand gesondert abzunehmen; sie sind nicht durch die bisherigen Unit-Tests nachgewiesen. Details: `automation-roadmap.md`.
 
 ## Zielbild
 
@@ -78,7 +78,7 @@ Fehlerpfade:
 
 - Eine Datenbank-Unique-Constraint erlaubt pro Enrollment und Sequenzschritt nur eine Nachricht.
 - Jede Nachricht besitzt einen unveränderlichen `idempotency_key`, der als `x-gordion-message-id` im Entwurf gespeichert wird.
-- Queue-Jobs werden mit kurzer Lease exklusiv verarbeitet. Ziel: Abgelaufene Leases nach einer möglichen Provider-Aktion müssen in manuelle Klärung statt blind zurück in die Versandqueue. Der bisherige Recovery-Pfad benötigt vor Livebetrieb eine Überarbeitung und Absturztests.
+- Queue-Jobs werden mit kurzer Lease exklusiv verarbeitet. Abgelaufene Delivery-Leases werden jetzt in `reconciliation_required` gesetzt und pausieren global. Ein Integrationstest prüft, dass keine erneute Freigabe erfolgt. Vollständige Prozessabbruch-/Nebenläufigkeitstests und automatische Klärung bleiben vor Livebetrieb offen.
 - Graph-Entwürfe werden mit `Prefer: IdType="ImmutableId"` erstellt. Die ID bleibt beim Verschieben in „Gesendete Elemente“ stabil.
 - Ein als unklar erkannter Timeout beim Erstellen oder Senden erzeugt `reconciliation_required`. Geplant: Ein Reconciliation-Worker scannt Entwürfe/Gesendete Elemente nach ID beziehungsweise Gordion-Header, bevor ein Mensch einen Wiederholungsversuch freigeben kann. Dieser automatisierte Scan ist noch nicht implementiert.
 - `send` wird nicht blind wiederholt. Bei `429` respektiert der Client `Retry-After`; Wiederholungen sind nur für sichere Leseoperationen automatisch.

@@ -49,6 +49,7 @@ const contactId = randomUUID();
 const campaignId = randomUUID();
 const enrollmentId = randomUUID();
 const messageId = randomUUID();
+const authorizationId = randomUUID();
 const recipientAddress = `smoke-${randomUUID()}@example.test`;
 const finalSubject = "Smoke test only";
 const finalBodyText = "This message never leaves the simulated provider.";
@@ -93,6 +94,8 @@ try {
         'eligible', now(), 'smoke-test'
       )
     `;
+    await transaction`INSERT INTO outreach_authorizations (id, contact_id, basis, evidence_reference, valid_until, verified_by)
+      VALUES (${authorizationId}, ${contactId}, 'own_test_address', 'Synthetic simulator smoke test', now() + interval '1 day', 'smoke-test')`;
     await transaction`
       INSERT INTO campaigns (
         id, name, mailbox_connection_id, status, business_weekdays,
@@ -115,11 +118,11 @@ try {
       INSERT INTO messages (
         id, enrollment_id, sequence_index, message_kind, status,
         recipient_address, final_subject, final_body_text, content_sha256,
-        due_at, approved_at, approved_by, approval_content_sha256
+        due_at, approved_at, approved_by, approval_content_sha256, authorization_id
       ) VALUES (
         ${messageId}, ${enrollmentId}, 0, 'initial', 'approved',
         ${recipientAddress}, ${finalSubject}, ${finalBodyText}, ${approvedHash},
-        now(), now(), 'smoke-test', ${approvedHash}
+        now(), now(), 'smoke-test', ${approvedHash}, ${authorizationId}
       )
     `;
   });

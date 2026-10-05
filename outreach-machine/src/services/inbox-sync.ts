@@ -84,6 +84,7 @@ export class InboxSyncService {
     if (message.isDraft || message.senderAddress === this.senderAddress.toLowerCase()) return false;
 
     return this.sql.begin(async (transaction) => {
+      await transaction`SELECT singleton FROM system_control WHERE singleton FOR UPDATE`;
       const inserted = await transaction<{ id: string }[]>`
         INSERT INTO inbound_messages (
           mailbox_connection_id, graph_message_id, internet_message_id,

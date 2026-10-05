@@ -12,6 +12,7 @@ export interface LeasedMessage {
   recipientAddress: string;
   finalSubject: string;
   finalBodyText: string;
+  logoSha256?: string | null;
   contentSha256: string;
   approvalContentSha256: string;
   graphMessageId: string | null;
@@ -29,7 +30,7 @@ export class MessageRepository {
 
   async leaseNextDraftCreation(workerId: string, now = new Date()): Promise<LeasedMessage | null> {
     return this.sql.begin(async (transaction) => {
-      await this.requeueExpiredLeases(transaction);
+      await this.quarantineExpiredLeases(transaction);
       const rows = await transaction<CandidateRow[]>`
         SELECT
           m.id,
@@ -39,6 +40,7 @@ export class MessageRepository {
           m.recipient_address,
           m.final_subject,
           m.final_body_text,
+          m.logo_sha256,
           m.content_sha256,
           m.approval_content_sha256,
           m.graph_message_id,
@@ -51,6 +53,7 @@ export class MessageRepository {
         JOIN campaigns c ON c.id = e.campaign_id
         CROSS JOIN system_control sc
         WHERE m.status = 'approved'
+          AND NOT c.autopilot
           AND m.due_at <= ${now}
           AND sc.globally_paused = false
           AND c.status = 'active'
@@ -122,7 +125,7 @@ export class MessageRepository {
 
   async leaseNextSend(workerId: string, now = new Date()): Promise<LeasedMessage | null> {
     return this.sql.begin(async (transaction) => {
-      await this.requeueExpiredLeases(transaction);
+      await this.quarantineExpiredLeases(transaction);
       const rows = await transaction<CandidateRow[]>`
         SELECT
           m.id,
@@ -132,6 +135,7 @@ export class MessageRepository {
           m.recipient_address,
           m.final_subject,
           m.final_body_text,
+          m.logo_sha256,
           m.content_sha256,
           m.approval_content_sha256,
           m.graph_message_id,
@@ -147,6 +151,7 @@ export class MessageRepository {
         JOIN campaigns c ON c.id = e.campaign_id
         CROSS JOIN system_control sc
         WHERE m.status = 'draft_created'
+          AND NOT c.autopilot
           AND m.due_at <= ${now}
           AND m.graph_message_id IS NOT NULL
           AND sc.globally_paused = false
@@ -223,6 +228,8 @@ export class MessageRepository {
     now = new Date(),
   ): Promise<{ sent: boolean; requestId: string | null }> {
     return this.sql.begin(async (transaction) => {
+      // Serialize the last send gate with pause, suppression and inbound stops.
+      await transaction`SELECT singleton FROM system_control WHERE singleton FOR UPDATE`;
       const sendable = await transaction<{ allowed: boolean }[]>`
         SELECT EXISTS (
           SELECT 1
@@ -234,8 +241,16 @@ export class MessageRepository {
           JOIN send_reservations sr ON sr.message_id = m.id AND sr.state = 'reserved'
           CROSS JOIN system_control sc
           WHERE m.id = ${message.id}
+            AND NOT c.autopilot
             AND m.status = 'leased'
             AND m.lease_owner = ${workerId}
+            AND m.lease_expires_at > ${now}
+            AND m.recipient_address = ct.email
+            AND ct.outreach_basis IS NOT NULL
+            AND c.legal_review_reference IS NOT NULL
+            AND co.fit_tier IN ('A', 'B')
+            AND EXISTS (SELECT 1 FROM outreach_authorizations a
+              WHERE a.id = m.authorization_id AND a.contact_id = ct.id AND a.revoked_at IS NULL AND a.valid_until > ${now})
             AND m.graph_message_id IS NOT NULL
             AND m.approval_content_sha256 = m.content_sha256
             AND sc.globally_paused = false
@@ -313,6 +328,7 @@ export class MessageRepository {
     workerId: string,
   ): Promise<void> {
     await this.sql.begin(async (transaction) => {
+      await transaction`SELECT singleton FROM system_control WHERE singleton FOR UPDATE`;
       await transaction`
         UPDATE messages
         SET status = 'reconciliation_required',
@@ -324,15 +340,13 @@ export class MessageRepository {
           AND lease_owner = ${workerId}
       `;
       await this.recordAttempt(transaction, message.id, operation, "uncertain", error);
-      if (operation === "send_draft") {
-        await transaction`
+      await transaction`
           UPDATE system_control
           SET globally_paused = true,
-              pause_reason = ${`Uncertain Microsoft Graph send for message ${message.id}`},
+              pause_reason = ${`Uncertain provider action ${operation} for message ${message.id}`},
               updated_by = ${workerId}
           WHERE singleton
-        `;
-      }
+      `;
       await this.audit(transaction, message.id, "message.reconciliation_required", workerId, {
         operation,
         code: error.code,
@@ -402,7 +416,9 @@ export class MessageRepository {
           e.campaign_id
         FROM messages m
         JOIN enrollments e ON e.id = m.enrollment_id
+        JOIN campaigns c ON c.id = e.campaign_id
         WHERE m.status = 'send_accepted'
+          AND NOT c.autopilot
           AND m.graph_message_id IS NOT NULL
           AND m.send_accepted_at < ${new Date(now.getTime() - 5_000)}
           AND (m.lease_expires_at IS NULL OR m.lease_expires_at < ${now})
@@ -449,15 +465,24 @@ export class MessageRepository {
     `;
   }
 
-  private async requeueExpiredLeases(transaction: postgres.TransactionSql): Promise<void> {
-    await transaction`
+  private async quarantineExpiredLeases(transaction: postgres.TransactionSql): Promise<void> {
+    await transaction`SELECT singleton FROM system_control WHERE singleton FOR UPDATE`;
+    const expired = await transaction<{ id: string }[]>`
       UPDATE messages
-      SET status = CASE WHEN graph_message_id IS NULL THEN 'approved' ELSE 'draft_created' END,
+      SET status = 'reconciliation_required',
+          last_error_code = 'lease_expired_uncertain',
+          last_error_detail = 'Provider side effect may have occurred; automatic retry prohibited',
           lease_owner = NULL,
           lease_expires_at = NULL
       WHERE status = 'leased'
         AND lease_expires_at < now()
+      RETURNING id
     `;
+    if (expired.length) {
+      await transaction`UPDATE system_control SET globally_paused = true,
+        pause_reason = 'Expired delivery lease requires reconciliation', updated_by = 'lease-recovery' WHERE singleton`;
+      for (const row of expired) await this.audit(transaction, row.id, 'message.expired_lease_quarantined', 'lease-recovery');
+    }
   }
 
   private async recordAttempt(

@@ -17,6 +17,7 @@ export class SimulatedMailProvider implements MailProvider {
       isDraft: true,
       subject: message.subject,
       bodyText: message.bodyText,
+      logoSha256: message.logoSha256 ?? null,
       recipientAddresses: [message.recipientAddress.toLowerCase()],
     };
     this.messages.set(providerMessage.id, providerMessage);
@@ -25,7 +26,8 @@ export class SimulatedMailProvider implements MailProvider {
 
   async sendDraft(providerMessageId: string): Promise<{ requestId: string }> {
     const message = this.messages.get(providerMessageId);
-    if (!message) throw new Error(`Unknown simulated draft ${providerMessageId}`);
+    if (!message)
+      throw new Error(`Unknown simulated draft ${providerMessageId}`);
     this.messages.set(providerMessageId, {
       ...message,
       isDraft: false,

@@ -5,8 +5,9 @@ import { createMailProvider } from "./mail/provider-factory.js";
 import { InboxSyncService } from "./services/inbox-sync.js";
 
 const config = loadConfig();
+if (config.MAIL_PROVIDER === 'microsoft_graph') throw new Error('Use autopilot:start for complete mailbox synchronization');
 const sql = createDatabase(config);
-const provider = createMailProvider(config);
+const provider = createMailProvider(config,sql);
 let stopping = false;
 
 process.once("SIGINT", () => {

@@ -27,15 +27,24 @@ export class DeliveryWorker {
   ) {}
 
   async runOnce(now = new Date()): Promise<WorkerOutcome> {
-    const confirmation = await this.repository.leaseAcceptedForConfirmation(this.workerId, now);
+    const confirmation = await this.repository.leaseAcceptedForConfirmation(
+      this.workerId,
+      now,
+    );
     if (confirmation) return this.confirmAcceptedMessage(confirmation);
 
     if (!this.config.LIVE_SEND_ENABLED) return "live_send_disabled";
 
-    const draftCandidate = await this.repository.leaseNextDraftCreation(this.workerId, now);
+    const draftCandidate = await this.repository.leaseNextDraftCreation(
+      this.workerId,
+      now,
+    );
     if (draftCandidate) return this.createDraft(draftCandidate);
 
-    const sendCandidate = await this.repository.leaseNextSend(this.workerId, now);
+    const sendCandidate = await this.repository.leaseNextSend(
+      this.workerId,
+      now,
+    );
     if (sendCandidate) return this.sendDraft(sendCandidate, now);
 
     return "idle";
@@ -48,6 +57,7 @@ export class DeliveryWorker {
         recipientAddress: message.recipientAddress,
         subject: message.finalSubject,
         bodyText: message.finalBodyText,
+        logoSha256: message.logoSha256 ?? null,
       });
       this.assertExactDraft(message, draft);
       await this.repository.markDraftCreated(
@@ -65,7 +75,10 @@ export class DeliveryWorker {
     }
   }
 
-  private async sendDraft(message: LeasedMessage, now: Date): Promise<WorkerOutcome> {
+  private async sendDraft(
+    message: LeasedMessage,
+    now: Date,
+  ): Promise<WorkerOutcome> {
     try {
       if (!message.graphMessageId) {
         throw new ProviderError({
@@ -73,11 +86,15 @@ export class DeliveryWorker {
           message: "Cannot send a message without a provider draft ID",
         });
       }
-      const draft = await this.provider.getMessage(message.graphMessageId);
+      const draft = await this.provider.getMessage(
+        message.graphMessageId,
+        Boolean(message.logoSha256),
+      );
       if (!draft?.isDraft) {
         throw new ProviderError({
           code: "provider_draft_missing",
-          message: "The approved Microsoft draft is missing or no longer a draft",
+          message:
+            "The approved Microsoft draft is missing or no longer a draft",
         });
       }
       this.assertExactDraft(message, draft);
@@ -94,15 +111,22 @@ export class DeliveryWorker {
     }
   }
 
-  private async confirmAcceptedMessage(message: LeasedMessage): Promise<WorkerOutcome> {
+  private async confirmAcceptedMessage(
+    message: LeasedMessage,
+  ): Promise<WorkerOutcome> {
     if (!message.graphMessageId) {
       await this.repository.releaseConfirmationLease(message.id, this.workerId);
       return "confirmation_pending";
     }
     try {
-      const providerMessage = await this.provider.getMessage(message.graphMessageId);
+      const providerMessage = await this.provider.getMessage(
+        message.graphMessageId,
+      );
       if (!providerMessage || providerMessage.isDraft) {
-        await this.repository.releaseConfirmationLease(message.id, this.workerId);
+        await this.repository.releaseConfirmationLease(
+          message.id,
+          this.workerId,
+        );
         return "confirmation_pending";
       }
       await this.repository.markSentConfirmed(message, this.workerId);
@@ -113,8 +137,13 @@ export class DeliveryWorker {
     }
   }
 
-  private assertExactDraft(message: LeasedMessage, draft: ProviderMessage): void {
-    const recipients = draft.recipientAddresses.map((value) => value.toLowerCase());
+  private assertExactDraft(
+    message: LeasedMessage,
+    draft: ProviderMessage,
+  ): void {
+    const recipients = draft.recipientAddresses.map((value) =>
+      value.toLowerCase(),
+    );
     const expectedRecipient = message.recipientAddress.toLowerCase();
     if (
       !draft.isDraft ||
@@ -124,11 +153,13 @@ export class DeliveryWorker {
         recipientAddress: expectedRecipient,
         subject: draft.subject,
         bodyText: draft.bodyText,
+        logoSha256: draft.logoSha256 ?? null,
       }) !== message.contentSha256
     ) {
       throw new ProviderError({
         code: "provider_draft_changed",
-        message: "Provider draft no longer matches the approved recipient or content",
+        message:
+          "Provider draft no longer matches the approved recipient or content",
       });
     }
   }
@@ -138,13 +169,16 @@ export class DeliveryWorker {
     operation: "create_draft" | "send_draft",
     error: unknown,
   ): Promise<WorkerOutcome> {
-    const providerError = error instanceof ProviderError
-      ? error
-      : new ProviderError({
-          code: "unexpected_provider_error",
-          message: error instanceof Error ? error.message : "Unknown provider error",
-          cause: error,
-        });
+    const providerError =
+      error instanceof ProviderError
+        ? error
+        : new ProviderError({
+            code: "unexpected_provider_error",
+            message:
+              "Unexpected delivery failure; provider outcome requires reconciliation",
+            uncertain: true,
+            cause: error,
+          });
     if (providerError.uncertain) {
       await this.repository.markReconciliationRequired(
         message,
@@ -154,7 +188,12 @@ export class DeliveryWorker {
       );
       return "reconciliation_required";
     }
-    await this.repository.markSafeFailure(message, operation, providerError, this.workerId);
+    await this.repository.markSafeFailure(
+      message,
+      operation,
+      providerError,
+      this.workerId,
+    );
     return "provider_failure";
   }
 }

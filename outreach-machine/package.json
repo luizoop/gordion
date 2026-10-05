@@ -7,7 +7,21 @@
     "node": ">=22"
   },
   "scripts": {
+    "autopilot:start": "node --env-file-if-exists=.env --env-file-if-exists=.outreach-data/operator.env --import tsx scripts/supervisor.ts",
+    "autopilot:operator-setup": "node --import tsx scripts/operator-setup.ts",
+    "autopilot:launchagent": "node --import tsx scripts/launchagent.ts",
+    "backup:create": "node --env-file-if-exists=.env --import tsx scripts/backup.ts",
+    "backup:restore-test": "node --env-file-if-exists=.env --import tsx scripts/restore-test.ts",
+    "research:import-seed": "node --env-file-if-exists=.env --import tsx scripts/import-seed.ts",
+    "research:contact-sites": "node --env-file-if-exists=.env --import tsx scripts/research-contact-sites.ts",
+    "drafts:local-review": "node --env-file-if-exists=.env --import tsx scripts/prepare-local-review-batch.ts",
+    "autopilot:worker": "node --env-file-if-exists=.env --import tsx src/autopilot-main.ts",
+    "smoke:autopilot": "node --env-file-if-exists=.env --import tsx scripts/smoke-autopilot.ts",
+    "smoke:autopilot-faults": "node --env-file-if-exists=.env --import tsx scripts/smoke-autopilot-faults.ts",
     "local:start": "node --import tsx scripts/local.ts",
+    "local:shadow": "node --import tsx scripts/local.ts --shadow",
+    "local:shadow-check": "node --import tsx scripts/local.ts --shadow --sync-once",
+    "smoke:shadow-binding": "node --import tsx scripts/smoke-shadow-binding.ts",
     "local:status": "node --import tsx scripts/local.ts --status",
     "build": "tsc -p tsconfig.json",
     "dev": "node --env-file-if-exists=.env --import tsx --watch src/server.ts",
@@ -18,7 +32,9 @@
     "start:sync": "node --env-file-if-exists=.env dist/src/sync-main.js",
     "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
     "graph:check": "node --env-file-if-exists=.env --import tsx scripts/check-microsoft-connection.ts",
+    "graph:autopilot-check": "node --env-file-if-exists=.env --import tsx scripts/check-autopilot-graph.ts",
     "smoke:worker": "node --env-file-if-exists=.env --import tsx scripts/smoke-worker.ts",
+    "smoke:console": "node --env-file-if-exists=.env --import tsx scripts/smoke-console.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -28,12 +44,15 @@
     "@fastify/helmet": "^13.0.2",
     "fastify": "^5.6.1",
     "luxon": "^3.7.2",
+    "parse5": "^8.0.1",
+    "pngjs": "^7.0.0",
     "postgres": "^3.4.7",
     "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.1",
     "@types/node": "^24.7.2",
+    "@types/pngjs": "^6.0.5",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"

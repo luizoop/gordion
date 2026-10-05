@@ -105,10 +105,11 @@ describe("MicrosoftGraphMailProvider", () => {
       fetchImplementation,
     });
 
+    fetchImplementation.mockResolvedValueOnce(new Response(JSON.stringify({value:[]}),{status:200}));
     await expect(provider.getMessage("message-id")).resolves.toMatchObject({
       id: "message-id",
     });
-    expect(fetchImplementation).toHaveBeenCalledTimes(2);
+    expect(fetchImplementation).toHaveBeenCalledTimes(3);
   });
 
   it("rejects a stored delta cursor outside Microsoft Graph", async () => {
